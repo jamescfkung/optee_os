@@ -1,4 +1,4 @@
-PLATFORM_FLAVOR ?= fvp
+PLATFORM_FLAVOR ?= mt8173
 PLATFORM_FLAVOR_$(PLATFORM_FLAVOR) := y
 
 # 32-bit flags
@@ -16,7 +16,7 @@ arm64-platform-cflags	+= -mgeneral-regs-only
 
 platform-cflags += -ffunction-sections -fdata-sections
 
-DEBUG		?= 1
+DEBUG		?= 0
 ifeq ($(DEBUG),1)
 platform-cflags += -O0
 else
@@ -26,10 +26,7 @@ endif
 platform-cflags += -g
 platform-aflags += -g
 
-ifeq ($(PLATFORM_FLAVOR),fvp)
-platform-flavor-armv8 := 1
-endif
-ifeq ($(PLATFORM_FLAVOR),juno)
+ifeq ($(PLATFORM_FLAVOR),mt8173)
 platform-flavor-armv8 := 1
 endif
 

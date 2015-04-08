@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, STMicroelectronics International N.V.
+ * Copyright (c) 2015, Linaro Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -138,7 +138,7 @@ static struct map_area bootcfg_memory_map[] = {
 	{	/* teecore public RAM - NonSecure, non-exec. */
 	 .type = MEM_AREA_NSEC_SHM,
 	 .pa = CFG_SHMEM_START, .size = CFG_SHMEM_SIZE,
-	 .cached = true, .secure = false, .rw = true, .exec = false,
+	 .cached = false, .secure = false, .rw = true, .exec = false,
 	 },
 
 	{
@@ -151,20 +151,6 @@ static struct map_area bootcfg_memory_map[] = {
 	 .pa = DEVICE1_BASE, .size = DEVICE1_SIZE,
 	 .device = true, .secure = true, .rw = true,
 	 },
-#ifdef DEVICE2_BASE
-	{
-	 .type = MEM_AREA_IO_SEC,
-	 .pa = DEVICE2_BASE, .size = DEVICE2_SIZE,
-	 .device = true, .secure = true, .rw = true,
-	 },
-#endif
-#ifdef DEVICE3_BASE
-	{
-	 .type = MEM_AREA_IO_SEC,
-	 .pa = DEVICE3_BASE, .size = DEVICE3_SIZE,
-	 .device = true, .secure = true, .rw = true,
-	 },
-#endif
 	{.type = MEM_AREA_NOTYPE}
 };
 

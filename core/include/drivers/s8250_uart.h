@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, STMicroelectronics International N.V.
+ * Copyright (c) 2015, Linaro Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,19 +24,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef S8250_UART_H
+#define S8250_UART_H
 
-#include <asm.S>
-#include <arm.h>
-#include <arm32_macros.S>
+#include <types_ext.h>
 
-/* For Juno number the two A57s as 4 to 5 and A53s as 0 to 3 */
-FUNC get_core_pos , :
-	read_mpidr r0
-	/* Calculate CorePos = ((ClusterId ^ 1) * 4) + CoreId */
-	and	r1, r0, #MPIDR_CPU_MASK
-	and	r0, r0, #MPIDR_CLUSTER_MASK
-	eor	r0, r0, #(1 << MPIDR_CLUSTER_SHIFT)
-	add	r0, r1, r0, LSR #6
-	bx	lr
-END_FUNC get_core_pos
+void s8250_uart_init(vaddr_t base,
+		uint32_t uart_clk, uint32_t baud_rate);
+
+void s8250_uart_putc(int ch, vaddr_t base);
+
+void s8250_uart_flush_tx_fifo(vaddr_t base);
+
+bool s8250_uart_have_rx_data(vaddr_t base);
+
+int s8250_uart_getchar(vaddr_t base);
+
+#endif /* S8250_UART_H */
 

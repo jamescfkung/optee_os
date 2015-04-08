@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, STMicroelectronics International N.V.
+ * Copyright (c) 2014, Linaro Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include <platform_config.h>
 #include <pm_debug.h>
 
@@ -32,7 +31,7 @@
 #include <string.h>
 
 #include <drivers/gic.h>
-#include <drivers/pl011.h>
+#include <drivers/s8250_uart.h>
 #include <sm/sm.h>
 #include <sm/tee_mon.h>
 
@@ -183,35 +182,13 @@ static void main_init_cpacr(void)
 }
 #endif
 
-#if PLATFORM_FLAVOR_IS(fvp) || PLATFORM_FLAVOR_IS(juno)
+#if PLATFORM_FLAVOR_IS(mt8173)
 static void main_init_gic(void)
 {
 	/*
 	 * On ARMv8, GIC configuration is initialized in ARM-TF,
 	 */
 	gic_init_base_addr(GIC_BASE + GICC_OFFSET, GIC_BASE + GICD_OFFSET);
-	gic_it_add(IT_CONSOLE_UART);
-	/* Route FIQ to primary CPU */
-	gic_it_set_cpu_mask(IT_CONSOLE_UART, gic_it_get_target(0));
-	gic_it_set_prio(IT_CONSOLE_UART, 0x1);
-	gic_it_enable(IT_CONSOLE_UART);
-
-}
-#elif PLATFORM_FLAVOR_IS(qemu)
-static void main_init_gic(void)
-{
-	/* Initialize GIC */
-	gic_init(GIC_BASE + GICC_OFFSET, GIC_BASE + GICD_OFFSET);
-	gic_it_add(IT_CONSOLE_UART);
-	gic_it_set_cpu_mask(IT_CONSOLE_UART, 0x1);
-	gic_it_set_prio(IT_CONSOLE_UART, 0xff);
-	gic_it_enable(IT_CONSOLE_UART);
-}
-#elif PLATFORM_FLAVOR_IS(qemu_virt)
-static void main_init_gic(void)
-{
-	/* Initialize GIC */
-	gic_init(GIC_BASE + GICC_OFFSET, GIC_BASE + GICD_OFFSET);
 }
 #endif
 
@@ -454,9 +431,9 @@ static void main_fiq(void)
 
 	iar = gic_read_iar();
 
-	while (pl011_have_rx_data(CONSOLE_UART_BASE)) {
+	while (s8250_uart_have_rx_data(CONSOLE_UART_BASE)) {
 		DMSG("cpu %zu: got 0x%x",
-		     get_core_pos(), pl011_getchar(CONSOLE_UART_BASE));
+		     get_core_pos(), s8250_uart_getchar(CONSOLE_UART_BASE));
 	}
 
 	gic_write_eoir(iar);
@@ -565,14 +542,14 @@ vaddr_t core_mmu_get_ul1_ttb_va(void)
 
 void console_putc(int ch)
 {
-	pl011_putc(ch, CONSOLE_UART_BASE);
+	s8250_uart_putc(ch, CONSOLE_UART_BASE);
 	if (ch == '\n')
-		pl011_putc('\r', CONSOLE_UART_BASE);
+		s8250_uart_putc('\r', CONSOLE_UART_BASE);
 }
 
 void console_flush(void)
 {
-	pl011_flush(CONSOLE_UART_BASE);
+	s8250_uart_flush_tx_fifo(CONSOLE_UART_BASE);
 }
 
 #ifndef CFG_WITH_LPAE

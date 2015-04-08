@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Linaro Limited
+ * Copyright (c) 2015, Linaro Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,41 +24,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include <stddef.h>
-#include <string.h>
+#include <stdlib.h>
+#include <rng_support.h>
 #include <trace.h>
-#include <kernel/tee_common_otp.h>
 
-#define SHA256_HASH_SIZE 32
-uint8_t hw_key_digest[SHA256_HASH_SIZE];
-
-/*---------------------------------------------------------------------------*/
-/*                             tee_otp_get_hw_unique_key                    */
-/*---------------------------------------------------------------------------*/
-/*
-    This function reads out a hw unique key.
-
-    \param[in]  hwkey data place holder for the key data read
-    \param[out] None.
-    \return None.
-
- */
-/*---------------------------------------------------------------------------*/
-void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
+/* Bad software version */
+uint8_t hw_get_random_byte(void)
 {
-	/* Copy the first part of the new hw key */
-	memcpy(&hwkey->data[0], &hw_key_digest[0],
-	       sizeof(struct tee_hw_unique_key));
-}
+	static uint32_t lcg_state;
+	static uint32_t nb_soft = 9876543;
+#define MAX_SOFT_RNG 1024
+	static const uint32_t a = 1664525;
+	static const uint32_t c = 1013904223;
 
-int tee_otp_get_die_id(uint8_t *buffer, size_t len)
-{
-	size_t i;
-
-	char pattern[4] = { 'B', 'E', 'E', 'F' };
-	for (i = 0; i < len; i++)
-		buffer[i] = pattern[i % 4];
-
-	return 0;
+	nb_soft = (nb_soft + 1) % MAX_SOFT_RNG;
+	lcg_state = (a * lcg_state + c);
+	return (uint8_t) (lcg_state >> 24);
 }

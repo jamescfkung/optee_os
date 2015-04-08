@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Linaro Limited
+ * Copyright (c) 2015, Linaro Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,40 +25,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stddef.h>
-#include <string.h>
-#include <trace.h>
-#include <kernel/tee_common_otp.h>
+#include <asm.S>
+#include <arm.h>
+#include <arm32_macros.S>
 
-#define SHA256_HASH_SIZE 32
-uint8_t hw_key_digest[SHA256_HASH_SIZE];
+FUNC get_core_pos , :
+	read_mpidr r0
+	and	r1, r0, #MPIDR_CPU_MASK
+	and	r0, r0, #MPIDR_CLUSTER_MASK
+	/* TODO: this should depends on core count */
+	add	r0, r1, r0, LSR #7
+	bx	lr
+END_FUNC get_core_pos
 
-/*---------------------------------------------------------------------------*/
-/*                             tee_otp_get_hw_unique_key                    */
-/*---------------------------------------------------------------------------*/
-/*
-    This function reads out a hw unique key.
-
-    \param[in]  hwkey data place holder for the key data read
-    \param[out] None.
-    \return None.
-
- */
-/*---------------------------------------------------------------------------*/
-void tee_otp_get_hw_unique_key(struct tee_hw_unique_key *hwkey)
-{
-	/* Copy the first part of the new hw key */
-	memcpy(&hwkey->data[0], &hw_key_digest[0],
-	       sizeof(struct tee_hw_unique_key));
-}
-
-int tee_otp_get_die_id(uint8_t *buffer, size_t len)
-{
-	size_t i;
-
-	char pattern[4] = { 'B', 'E', 'E', 'F' };
-	for (i = 0; i < len; i++)
-		buffer[i] = pattern[i % 4];
-
-	return 0;
-}

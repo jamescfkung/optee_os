@@ -28,10 +28,7 @@
 #ifndef PLATFORM_CONFIG_H
 #define PLATFORM_CONFIG_H
 
-#define PLATFORM_FLAVOR_ID_fvp		0
-#define PLATFORM_FLAVOR_ID_qemu		1
-#define PLATFORM_FLAVOR_ID_qemu_virt	2
-#define PLATFORM_FLAVOR_ID_juno		3
+#define PLATFORM_FLAVOR_ID_mt8173	0
 #define PLATFORM_FLAVOR_IS(flav) \
 	(PLATFORM_FLAVOR == PLATFORM_FLAVOR_ID_ ## flav)
 
@@ -48,57 +45,15 @@
 #define PLATFORM_LINKER_ARCH	aarch64
 #endif /*ARM64*/
 
-#if PLATFORM_FLAVOR_IS(fvp) || PLATFORM_FLAVOR_IS(qemu)
+#if PLATFORM_FLAVOR_IS(mt8173)
 
-#define GIC_BASE		0x2c000000
-#define UART0_BASE		0x1c090000
-#define UART1_BASE		0x1c0a0000
-#define UART2_BASE		0x1c0b0000
-#define UART3_BASE		0x1c0c0000
+#define GIC_BASE		0x10220000
+#define UART0_BASE		0x11002000
+#define UART1_BASE		0x11003000
+#define UART2_BASE		0x11004000
+#define UART3_BASE		0x11005000
 
-#define IT_UART1		38
-
-#define CONSOLE_UART_BASE	UART1_BASE
-#define IT_CONSOLE_UART		IT_UART1
-
-#elif PLATFORM_FLAVOR_IS(juno)
-
-#define GIC_BASE		0x2c010000
-
-/* FPGA UART0 */
-#define UART0_BASE		0x1c090000
-/* FPGA UART1 */
-#define UART1_BASE		0x1c0a0000
-/* SoC UART0 */
-#define UART2_BASE		0x7ff80000
-/* SoC UART1 */
-#define UART3_BASE		0x7ff70000
-
-
-#define UART0_CLK_IN_HZ		24000000
-#define UART1_CLK_IN_HZ		24000000
-#define UART2_CLK_IN_HZ		7273800
-#define UART3_CLK_IN_HZ		7273800
-
-
-#define IT_UART3		116
-
-#define CONSOLE_UART_BASE	UART3_BASE
-#define IT_CONSOLE_UART		IT_UART3
-#define CONSOLE_UART_CLK_IN_HZ	UART3_CLK_IN_HZ
-
-#elif PLATFORM_FLAVOR_IS(qemu_virt)
-
-#define GIC_BASE		0x08000000
-#define UART0_BASE		0x09000000
-#define UART1_BASE		0x09010000
-#define PCSC_BASE		0x09100000
-
-#define IT_UART1		34
-#define IT_PCSC			37
-
-#define CONSOLE_UART_BASE	UART1_BASE
-#define IT_CONSOLE_UART		IT_UART1
+#define CONSOLE_UART_BASE	UART0_BASE
 
 #else
 #error "Unknown platform flavor"
@@ -106,18 +61,18 @@
 
 #define HEAP_SIZE		(24 * 1024)
 
-#if PLATFORM_FLAVOR_IS(fvp)
+#if PLATFORM_FLAVOR_IS(mt8173)
 /*
- * FVP specifics.
+ * MT8173 specifics.
  */
 
-#define DRAM0_BASE		0x80000000
+#define DRAM0_BASE		0x40000000
 #define DRAM0_SIZE		0x80000000
 
 #ifdef CFG_WITH_PAGER
 
 /* Emulated SRAM */
-#define TZSRAM_BASE		(0x06000000)
+#define TZSRAM_BASE		(0xBE000000)
 #define TZSRAM_SIZE		(200 * 1024)
 
 #define TZDRAM_BASE		(TZSRAM_BASE + CFG_TEE_RAM_VA_SIZE)
@@ -126,122 +81,18 @@
 #else /*CFG_WITH_PAGER*/
 
 /* Location of trusted dram on the base fvp */
-#define TZDRAM_BASE		0x06000000
+#define TZDRAM_BASE		0xBE000000
 #define TZDRAM_SIZE		0x02000000
 
 #endif /*CFG_WITH_PAGER*/
 
-#define CFG_TEE_CORE_NB_CORE	8
+#define CFG_TEE_CORE_NB_CORE	4
 
-#define CFG_SHMEM_START		(DRAM0_BASE + 0x1000000)
-#define CFG_SHMEM_SIZE		0x100000
-
-#define GICC_OFFSET		0x0
-#define GICD_OFFSET		0x3000000
-
-#elif PLATFORM_FLAVOR_IS(juno)
-/*
- * Juno specifics.
- */
-
-#define DRAM0_BASE		0x80000000
-#define DRAM0_SIZE		0x7F000000
-
-#ifdef CFG_WITH_PAGER
-
-/* Emulated SRAM */
-#define TZSRAM_BASE		0xFF000000
-#define TZSRAM_SIZE		(200 * 1024)
-
-#define TZDRAM_BASE		(TZSRAM_BASE + CFG_TEE_RAM_VA_SIZE)
-#define TZDRAM_SIZE		(0x00E00000 - CFG_TEE_RAM_VA_SIZE)
-
-#else /*CFG_WITH_PAGER*/
-/*
- * Last part of DRAM is reserved as secure dram, note that the last 2MiB
- * of DRAM0 is used by SCP dor DDR retraining.
- */
-#define TZDRAM_BASE		0xFF000000
-/*
- * Should be
- * #define TZDRAM_SIZE		0x00FF8000
- * but is smaller due to SECTION_SIZE alignment, can be fixed once
- * OP-TEE OS is mapped using small pages instead.
- */
-#define TZDRAM_SIZE		0x00E00000
-#endif /*CFG_WITH_PAGER*/
-
-#define CFG_TEE_CORE_NB_CORE	6
-
-#define CFG_SHMEM_START		(DRAM0_BASE + DRAM0_SIZE - CFG_SHMEM_SIZE)
-#define CFG_SHMEM_SIZE		0x100000
-
-#define GICC_OFFSET		0x1f000
-#define GICD_OFFSET		0
-
-#elif PLATFORM_FLAVOR_IS(qemu)
-/*
- * QEMU specifics.
- */
-#ifdef CFG_WITH_PAGER
-#error "Pager not supported for platform vepress-qemu"
-#endif
-
-#define DRAM0_BASE		0x80000000
-#define DRAM0_SIZE		0x40000000
-
-/* Location of "trusted dram" */
-#define TZDRAM_BASE		0xC0000000
-#define TZDRAM_SIZE		0x02000000
-
-#define DDR_PHYS_START		DRAM0_BASE
-#define DDR_SIZE		DRAM0_SIZE
-
-#define CFG_TEE_CORE_NB_CORE	2
-
-
-#define CFG_SHMEM_START		(TZDRAM_BASE + TZDRAM_SIZE)
+#define CFG_SHMEM_START		(TZDRAM_BASE - 0x200000)
 #define CFG_SHMEM_SIZE		0x100000
 
 #define GICC_OFFSET		0x2000
 #define GICD_OFFSET		0x1000
-
-#elif PLATFORM_FLAVOR_IS(qemu_virt)
-/*
- * QEMU virt specifics.
- */
-
-#define DRAM0_BASE		0x40000000
-#define DRAM0_SIZE		(0x40000000 - DRAM0_TEERES_SIZE)
-
-#define DRAM0_TEERES_BASE	(DRAM0_BASE + DRAM0_SIZE)
-#define DRAM0_TEERES_SIZE	(33 * 1024 * 1024)
-
-#ifdef CFG_WITH_PAGER
-
-/* Emulated SRAM */
-#define TZSRAM_BASE		DRAM0_TEERES_BASE
-#define TZSRAM_SIZE		(200 * 1024)
-
-#define TZDRAM_BASE		(DRAM0_TEERES_BASE + CFG_TEE_RAM_VA_SIZE)
-#define TZDRAM_SIZE		(32 * 1024 * 1024 - CFG_TEE_RAM_VA_SIZE)
-
-#else /* CFG_WITH_PAGER */
-
-#define TZDRAM_BASE		DRAM0_TEERES_BASE
-#define TZDRAM_SIZE		(32 * 1024 * 1024)
-
-#endif /* CFG_WITH_PAGER */
-
-#define CFG_TEE_CORE_NB_CORE	2
-
-#define CFG_SHMEM_START		(DRAM0_TEERES_BASE + \
-					(DRAM0_TEERES_SIZE - CFG_SHMEM_SIZE))
-#define CFG_SHMEM_SIZE		(1024 * 1024)
-
-#define GICD_OFFSET		0
-#define GICC_OFFSET		0x10000
-
 
 #else
 #error "Unknown platform flavor"
